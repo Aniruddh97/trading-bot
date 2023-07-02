@@ -57,9 +57,6 @@ class ChannelBreakoutIndicator:
         if (endIndex<=startIndex or startIndex<0 or endIndex>=len(self.df)):
             print("\n Invalid startIndex or endIndex")
             
-        self.setPivotPoint()
-        self.setPivotMarker()
-        
         dfSlice = self.df[startIndex:endIndex]
         fig = go.Figure(data=[go.Candlestick(x=dfSlice.index,
                         open=dfSlice["Open"],
@@ -96,9 +93,6 @@ class ChannelBreakoutIndicator:
         if (candleIndex-backCandles<0 or candleIndex>len(self.df)):
             print("\n Invalid candleIndex & backCandles combination")
             return
-
-        self.setPivotPoint()
-        self.setPivotMarker()
 
         startIndex = candleIndex-backCandles
         endIndex = candleIndex
@@ -190,11 +184,6 @@ class ChannelBreakoutIndicator:
             print("\nInvalid candleIndex & backCandles combination")
             return
 
-        self.setPivotPoint()
-        self.setPivotMarker()
-        self.setBreakoutPoint(backCandles)
-        self.setBreakoutMarker()
-
         startIndex = candleIndex-backCandles
         endIndex = candleIndex
 
@@ -231,13 +220,21 @@ class ChannelBreakoutIndicator:
         fig.show()
 
 
-    def setSignal(self, backCandles=40):
-        self.df["Signal"] = self.getSignal(backCandles)
-
-
-    def getSignal(self, backCandles=40):
-        
+    def calculate(self, backCandles=40):
         self.setPivotPoint()
+        self.setPivotMarker()
         self.setBreakoutPoint(backCandles)
+        self.setBreakoutMarker()
 
+
+    def setSignal(self, backCandles=40):
+        self.df["Signal"] = self.getSignal()
+
+
+    def getSignal(self):
         self.df.isBreakout
+        
+
+    def getBuySell(self):
+        return ["SELL" if row.isBreakout == 1 else "BUY" if row.isBreakout == 2 else "" for index, row in self.df.iterrows()]
+    
