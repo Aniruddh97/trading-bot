@@ -1,0 +1,19 @@
+import talib
+
+candle_patterns = talib.get_function_groups()['Pattern Recognition']
+patterns = [
+ 'CDLDARKCLOUDCOVER',
+ 'CDLDOJI',
+ 'CDLENGULFING',
+ 'CDLEVENINGDOJISTAR',
+ 'CDLEVENINGSTAR',
+ 'CDLHAMMER',
+ 'CDLHANGINGMAN',
+ 'CDLHARAMI',
+ 'CDLMARUBOZU',
+ 'CDLMORNINGDOJISTAR',
+ 'CDLMORNINGSTAR',
+ 'CDLPIERCING',
+ 'CDLSHOOTINGSTAR',
+ 'CDLSPINNINGTOP',
+]
