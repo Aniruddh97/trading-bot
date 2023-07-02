@@ -4,9 +4,10 @@ from scipy import stats
 
 class ChannelBreakoutIndicator:
 
-    def __init__(self, data):
+    def __init__(self, data, tickerName=''):
         self.window = 4
         self.df = data
+        self.tickerName = tickerName
 
 
     def isPivot(self, candleIndex):
@@ -68,6 +69,7 @@ class ChannelBreakoutIndicator:
                         marker=dict(size=7, color="MediumPurple"),
                         name="pivotMarker")
         #fig.update_layout(xaxis_rangeslider_visible=False)
+        fig.update_layout(title_text=self.tickerName, title_font_size=18)
         fig.show()
 
 
@@ -122,6 +124,7 @@ class ChannelBreakoutIndicator:
         x = np.array(range(candleIndex-backCandles-self.window, candleIndex+1))
         fig.add_trace(go.Scatter(x=x, y=slopeLow*x + interceptLow, mode="lines", name="lower slope"))
         fig.add_trace(go.Scatter(x=x, y=slopeHigh*x + interceptHigh, mode="lines", name="max slope"))
+        fig.update_layout(title_text=self.tickerName, title_font_size=18)
         #fig.update_layout(xaxis_rangeslider_visible=False)
         fig.show()
 
@@ -217,6 +220,8 @@ class ChannelBreakoutIndicator:
         fig.add_trace(go.Scatter(x=x, y=slopeLow*x + interceptLow, mode="lines", name="lower slope"))
         fig.add_trace(go.Scatter(x=x, y=slopeHigh*x + interceptHigh, mode="lines", name="max slope"))
         #fig.update_layout(xaxis_rangeslider_visible=False)
+        #fig.update_layout(title_text=self.tickerName, title_font_color='MediumBlue', title_font_size=21)
+        fig.update_layout(title_text=self.tickerName, title_font_size=18)
         fig.show()
 
 
