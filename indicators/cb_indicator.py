@@ -231,13 +231,13 @@ class ChannelBreakoutIndicator:
         fig.show()
 
 
-    def setSignal(self, backCandles):
+    def setSignal(self, backCandles=40):
         self.df["Signal"] = self.getSignal(backCandles)
 
 
-    def getSignal(self, backCandles):
+    def getSignal(self, backCandles=40):
         
         self.setPivotPoint()
         self.setBreakoutPoint(backCandles)
 
-        return ["SELL" if row["isBreakout"] == 1 else "BUY" if row["isBreakout"] == 2 else "" for index, row in self.df.iterrows()]
+        self.df.isBreakout
