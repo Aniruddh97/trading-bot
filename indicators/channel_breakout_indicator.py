@@ -1,14 +1,6 @@
-import yfinance as yf
-import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from scipy import stats
-
-
-# data = yf.download("ITC.NS", period="5y", interval="1d", group_by="columns", progress=False, ignore_tz=False)
-# data.insert(loc=0, column="Date", value=data.index)
-# data.insert(loc=0, column="Index", value=list(range(0,len(data["Open"]))))
-# df = data.set_index("Index")
 
 class ChannelBreakoutIndicator:
 
@@ -237,3 +229,15 @@ class ChannelBreakoutIndicator:
         fig.add_trace(go.Scatter(x=x, y=slopeHigh*x + interceptHigh, mode="lines", name="max slope"))
         #fig.update_layout(xaxis_rangeslider_visible=False)
         fig.show()
+
+
+    def setSignal(self, backCandles):
+        self.df["Signal"] = self.getSignal(backCandles)
+
+
+    def getSignal(self, backCandles):
+        
+        self.setPivotPoint()
+        self.setBreakoutPoint(backCandles)
+
+        return ["SELL" if row["isBreakout"] == 1 else "BUY" if row["isBreakout"] == 2 else "" for index, row in self.df.iterrows()]
