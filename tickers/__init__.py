@@ -1,2 +1,2 @@
-from .tickers import all_tickers, my_tickers, tickers
-from .patterns import patterns, candle_patterns
+from .tickers import getTickerList
+from .patterns import getCandlePatternList

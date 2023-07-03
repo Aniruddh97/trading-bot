@@ -2,7 +2,7 @@ import datetime
 
 DATE_FORMAT = "%Y-%m-%d"
 
-def getStartEndDate(timeAgo='6m'):
+def getDateRange(timeAgo='6m'):
     duration = timeAgo[:-1]
     timeSymbol = timeAgo[-1]
     
@@ -17,7 +17,12 @@ def getStartEndDate(timeAgo='6m'):
         days = int(duration)*365
 
     today = datetime.date.today()
-    start_date = (today - datetime.timedelta(days=days)).strftime(DATE_FORMAT)
-    end_date = today.strftime(DATE_FORMAT)
+    start_date = (today - datetime.timedelta(days=days))
+    end_date = today
 
     return start_date, end_date
+
+
+def getDateRangeString(timeAgo='6m'):
+    start, end = getDateRange(timeAgo)
+    return start.strftime(DATE_FORMAT), end.strftime(DATE_FORMAT)
