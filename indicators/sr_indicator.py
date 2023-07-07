@@ -17,8 +17,8 @@ class SupportResistanceIndicator:
         self.levelProximity = max(data.High)/100
 
 
-    def getLevels(self):
-        dfSlice = self.df[-252:]
+    def getLevels(self, candleIndex):
+        dfSlice = self.df[0:candleIndex+1]
         supports = dfSlice[dfSlice.Low == dfSlice.Low.rolling(self.window, center=True).min()].Low
         resistances = dfSlice[dfSlice.High == dfSlice.High.rolling(self.window, center=True).max()].High
         levels = pd.concat([supports, resistances])
@@ -62,7 +62,7 @@ class SupportResistanceIndicator:
 
 
     def getCandleSignal(self, candleIndex):
-        levels = self.getLevels()
+        levels = self.getLevels(candleIndex)
 
         cR = self.isCloseToResistance(candleIndex, levels)
         cS = self.isCloseToSupport(candleIndex, levels)
@@ -75,8 +75,12 @@ class SupportResistanceIndicator:
             return 0
 
 
-    def showIndicator(self, candles):
-        dfSlice = self.df[-candles:]
+    def showIndicator(self, candleIndex):
+        start = candleIndex-100
+        if start < 0:
+            start = 0
+
+        dfSlice = self.df[start:candleIndex+1]
         fig = go.Figure(data=[go.Candlestick(x=dfSlice.index,
                         open=dfSlice["Open"],
                         high=dfSlice["High"],
@@ -84,9 +88,13 @@ class SupportResistanceIndicator:
                         close=dfSlice["Close"])])
         
 
-        levels = self.getLevels()
+        levels = self.getLevels(candleIndex)
+        
+        # ----------------
+        # for better visuals
         levels = levels[levels > (min(dfSlice.Close) - self.levelProximity)]
         levels = levels[levels < (max(dfSlice.High) + self.levelProximity)]
+        # ----------------
 
         for level in levels.to_list():
             fig.add_shape(
