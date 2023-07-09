@@ -6,7 +6,7 @@ import yfinance as yf
 
 # backtesting.set_bokeh_output(notebook=True)
 
-class BreakOut(Strategy):
+class ChannelBreakoutBacktest(Strategy):
     initsize = 0.1
     mysize = initsize
     

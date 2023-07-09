@@ -5,14 +5,17 @@ import plotly.graph_objects as go
 
 class SupportResistanceIndicator:
 
-    def __init__(self, data, window, backCandles):
+    def __init__(self, data, window, backCandles, tickerName=''):
         self.window = window
         self.backCandles = backCandles
         self.df = data
+        self.tickerName = tickerName
+        self.RRR = 1.5
         self.df['RSI'] = ta.rsi(data.Close, length=14)
+        self.df['Level'] = 0
 
         # candle proximity with a level
-        self.proximity = (((data.High.mean())-data.Low.mean())/data.High.mean()) * 50
+        self.proximity = (data.High.mean()-data.Low.mean()) / 4
         # proximity b/w levels
         self.levelProximity = max(data.High)/100
 
@@ -33,7 +36,8 @@ class SupportResistanceIndicator:
         c2 = abs(max(self.df.Open[candleIndex],self.df.Close[candleIndex])-minLevel)<=self.proximity
         c3 = min(self.df.Open[candleIndex],self.df.Close[candleIndex])<minLevel
         c4 = self.df.Low[candleIndex]<minLevel
-        if( (c1 or c2) and c3 and c4 ):
+        c5 = self.df.Close[candleIndex] > min(self.df.Close[candleIndex-self.backCandles:candleIndex-1])
+        if( (c1 or c2) and c3 and c4 and c5):
             return minLevel
         else:
             return 0
@@ -47,7 +51,8 @@ class SupportResistanceIndicator:
         c2 = abs(min(self.df.Open[candleIndex],self.df.Close[candleIndex])-minLevel)<=self.proximity
         c3 = max(self.df.Open[candleIndex],self.df.Close[candleIndex])>minLevel
         c4 = self.df.High[candleIndex]>minLevel
-        if( (c1 or c2) and c3 and c4 ):
+        c5 = self.df.Close[candleIndex] < max(self.df.Close[candleIndex-self.backCandles:candleIndex-1])
+        if( (c1 or c2) and c3 and c4 and c5):
             return minLevel
         else:
             return 0
@@ -68,15 +73,17 @@ class SupportResistanceIndicator:
         cS = self.isCloseToSupport(candleIndex, levels)
 
         if (cR and self.arePrevCandlesBelowResistance(candleIndex, cR) and self.df.RSI[candleIndex-1:candleIndex].min()<45 ):#and df.RSI[l]>65
+            self.df.loc[candleIndex, 'Level'] = cR
             return 1
         elif(cS and self.arePrevCandlesAboveSupport(candleIndex, cS) and self.df.RSI[candleIndex-1:candleIndex].max()>55 ):#and df.RSI[l]<35
+            self.df.loc[candleIndex, 'Level'] = cS
             return 2
         else:
             return 0
 
 
-    def showIndicator(self, candleIndex):
-        start = candleIndex-100
+    def showIndicator(self, candleIndex, color='blue'):
+        start = candleIndex-50
         if start < 0:
             start = 0
 
@@ -103,23 +110,24 @@ class SupportResistanceIndicator:
                 y0=level,
                 x1=dfSlice.index.stop + 2,
                 y1=level,
-                line=dict(color='blue'),
+                line=dict(color=color),
                 xref='x',
                 yref='y',
                 layer='below'
             )
 
+        # fig.add_scatter(x=dfSlice.index, y=dfSlice["SignalMarker"], mode="markers",
+        #                 marker=dict(size=7, color="Black"), marker_symbol="hexagram", name="signal")
+        fig.add_scatter(x=dfSlice.index, y=dfSlice["Target"], mode="markers",
+                        marker=dict(size=7, color="darkgreen"), name="target")
         fig.add_scatter(x=dfSlice.index, y=dfSlice["SignalMarker"], mode="markers",
-                        marker=dict(size=7, color="Black"), marker_symbol="hexagram",
-                        name="signal")
+                        marker=dict(size=7, color="darkred"), name="stoploss")
+
+        fig.update_layout(title_text=self.tickerName, title_font_size=18)
 
         fig.show()
         
     
-    def setSignalMarker(self):
-        self.df["SignalMarker"] = [self.getSignalMarker(row) for index, row in self.df.iterrows()]
-
-
     def getSignalMarker(self, x):
         markerDistance = (x["High"]-x["Low"])/10
         if x["Signal"]==2:
@@ -129,16 +137,55 @@ class SupportResistanceIndicator:
         else:
             return np.nan
         
+
+    def setSignalMarker(self):
+        self.df["SignalMarker"] = [self.getSignalMarker(row) for index, row in self.df.iterrows()]
+
     
     def calculate(self):
         self.setSignal()
         self.setSignalMarker()
+        self.setTarget()
+        self.setStoploss()
 
+
+    def getSignal(self):
+        return [self.getCandleSignal(index) for index in self.df.index]
+        
 
     def setSignal(self):
         self.df["Signal"] = self.getSignal()
 
 
-    def getSignal(self):
-        return [self.getCandleSignal(candle) for candle in self.df.index]
+    def getBuySell(self):
+        return ["SELL" if row.Signal == 1 else "BUY" if row.Signal == 2 else "" for index, row in self.df.iterrows()]
+    
+
+    def getTarget(self, candleIndex):
+        if self.df['Signal'][candleIndex] == 2:
+            support = self.df['Level'][candleIndex]
+            sl = support - self.proximity
+            return self.df.Close[candleIndex] + abs(self.df.Close[candleIndex]-sl)*self.RRR
+        elif self.df['Signal'][candleIndex] == 1:
+            resistance = self.df['Level'][candleIndex]
+            sl = resistance + self.proximity
+            return self.df.Close[candleIndex] - abs(self.df.Close[candleIndex]-sl)*self.RRR
+        else:
+            return np.nan
+    
+
+    def setTarget(self):
+        self.df['Target'] = [self.getTarget(index) for index in self.df.index]
+
+
+    def getStoploss(self, candleIndex):
+        if self.df['Signal'][candleIndex] == 2:
+            return self.df['Level'][candleIndex] - self.proximity
+        elif self.df['Signal'][candleIndex] == 1:
+            return self.df['Level'][candleIndex] + self.proximity
+        else:
+            return np.nan
         
+    
+    def setStoploss(self):
+        self.df['Stoploss'] = [self.getStoploss(index) for index in self.df.index]
