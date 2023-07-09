@@ -82,7 +82,7 @@ class SupportResistanceIndicator:
             return 0
 
 
-    def showIndicator(self, candleIndex, color='blue'):
+    def showIndicator(self, candleIndex, color='darkgrey'):
         start = candleIndex-50
         if start < 0:
             start = 0
@@ -180,9 +180,9 @@ class SupportResistanceIndicator:
 
     def getStoploss(self, candleIndex):
         if self.df['Signal'][candleIndex] == 2:
-            return self.df['Level'][candleIndex] - self.proximity
+            return self.df['Level'][candleIndex] - (2*self.proximity)
         elif self.df['Signal'][candleIndex] == 1:
-            return self.df['Level'][candleIndex] + self.proximity
+            return self.df['Level'][candleIndex] + (2*self.proximity)
         else:
             return np.nan
         
