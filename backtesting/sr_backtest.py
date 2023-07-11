@@ -1,7 +1,7 @@
 from backtesting import Strategy
 from backtesting import Backtest
 from indicators import SupportResistanceIndicator
-from datasource import getFullData
+from datasource import getStockData
 from datemodule import getDateRange
 
 # import backtesting
@@ -44,7 +44,7 @@ class SupportResistanceBacktest(Strategy):
 
 ticker = "RELIANCE.NS"
 startDate, endDate = getDateRange('2y')
-data = getFullData(ticker=ticker, start=startDate, end=endDate)
+data = getStockData(ticker=ticker, start=startDate, end=endDate)
 
 bt = Backtest(data, SupportResistanceBacktest, cash=300000, margin=1/10, commission=.002)
 print(bt.run())

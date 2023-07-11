@@ -1,7 +1,7 @@
 from tqdm import tqdm
-from datasource import getFullData
+from datasource import getStockData, getIndexData
 from datemodule import getDateRange
-from tickers import getTickerList, recognizePattern
+from tickers import getStockList, recognizePattern, getIndicesList
 from indicators import ChannelBreakoutIndicator, SupportResistanceIndicator
 
 import pandas
@@ -9,29 +9,32 @@ import pandas_ta as ta
 
 
 class TradingBot():
-	niftyStockData = {}
+	data = {}
 	promisingStocks = {}
 	indicatorCollection = {}
 		
 
 	def loadData(self, timePeriod = '6m', all=True, forceUpdate=False):
-		stocks, stockLiveData = getTickerList(all=all)
+		stocks, stockLiveData = getStockList(all=all)
+		indices, indexLiveData = getIndicesList(all=False)
 		startDate, endDate = getDateRange(timePeriod)
-		localNiftyStockData = {}
+		localData = {}
 
-		if len(self.niftyStockData) == 0 or forceUpdate:
+		if len(self.data) == 0 or forceUpdate:
 			for stock in tqdm(stocks):
-				localNiftyStockData[stock] = getFullData(stock, startDate, endDate, stockLiveData)
-			self.niftyStockData = localNiftyStockData
+				localData[stock] = getStockData(stock, startDate, endDate, stockLiveData)
+			for index in tqdm(indices):
+				localData[index] = getIndexData(index, startDate, endDate, indexLiveData)
+			self.data = localData
 
 
 	def computeSignal(self, all=True):
-		if len(self.niftyStockData) == 0:
+		if len(self.data) == 0:
 			print("Nifty 50 stock data not found!")
 
 		localPromisingStocks = {}
-		for stock in tqdm(self.niftyStockData):
-			df = self.niftyStockData[stock]
+		for stock in tqdm(self.data):
+			df = self.data[stock]
 
 			candleIndex = len(df)-1
 			stockSignals = {}
@@ -74,7 +77,7 @@ class TradingBot():
 	def showCBI(self, all=False):
 		stocks = self.promisingStocks
 		if all:
-			stocks = self.niftyStockData
+			stocks = self.data
 
 		for stock in stocks:
 			i = self.indicatorCollection[stock]["cbi"]
@@ -84,7 +87,7 @@ class TradingBot():
 	def showSRI(self, all=False):
 		stocks = self.promisingStocks
 		if all:
-			stocks = self.niftyStockData
+			stocks = self.data
 
 		for stock in stocks:
 			i = self.indicatorCollection[stock]["sri"]
@@ -100,7 +103,7 @@ class TradingBot():
 
 	def incompleteStocks(self):
 		_, endDate = getDateRange('1d')
-		for stock in self.niftyStockData:
-			stockData = self.niftyStockData[stock]
+		for stock in self.data:
+			stockData = self.data[stock]
 			if stockData['Date'][len(stockData.index)-1] != pandas.to_datetime(endDate):
 				print(stock)

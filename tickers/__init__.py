@@ -1,2 +1,2 @@
-from .tickers import getTickerList
+from .tickers import getStockList, getIndicesList
 from .patterns import getCandlePatternList, recognizePattern

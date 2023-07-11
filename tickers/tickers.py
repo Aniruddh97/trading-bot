@@ -1,6 +1,6 @@
 from jugaad_data.nse import NSELive
 
-def getTickerList(all=False):
+def getStockList(all=False):
     nifty50 = NSELive().live_index("NIFTY 50")['data'][1:]
     niftyData = {}
     tickerList = []
@@ -18,3 +18,22 @@ def getTickerList(all=False):
     if not all:
         return ['ITC', 'WIPRO', 'RELIANCE', 'NESTLEIND', 'TATAMOTORS'], niftyData
     return tickerList, niftyData
+
+
+def getIndicesList(all=False):
+    allIndices = NSELive().all_indices()
+    indexData = {}
+    indexList = []
+    
+    for idx in allIndices['data']:
+        indexList.append(idx['index'])
+        indexData[idx['index']] = {
+            'open': idx['open'],
+            'high': idx['high'],
+            'low': idx['low'],
+            'close': idx['last'],
+        }
+        
+    if not all:
+        return ['NIFTY 50', 'NIFTY BANK'], indexData
+    return indexList, indexData

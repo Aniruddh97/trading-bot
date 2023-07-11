@@ -34,8 +34,8 @@ def getJugaadData(ticker, start, end):
     return jdf.loc[::-1].reset_index().drop(['index'], axis=1)
 
 
-def getFullData(ticker, start, end, liveData = {}):
-    if len(liveData) == 0:
+def getStockData(ticker, start, end, liveData = {}):
+    if ticker not in liveData:
         info = NSELive().stock_quote(ticker)['priceInfo']
         o = info['open']
         h = info['intraDayHighLow']['max']
@@ -59,16 +59,23 @@ def getFullData(ticker, start, end, liveData = {}):
     return jdf.reset_index().drop(['index'], axis=1)
 
 
-def getNifty50Data(start, end):
+def getIndexData(indexName, start, end, liveData={}):
     _, e = getDateRange('1d')
-    niftyData = NSELive().live_index("NIFTY 50")['metadata']
-    o = niftyData['open']
-    l = niftyData['low']
-    h = niftyData['high']
-    c = niftyData['last']
-    # v = niftyData['totalTradedVolume']
     
-    jdf = index_df(symbol="NIFTY 50", from_date=start, to_date=end)
+    if indexName not in liveData:
+        liveIndexData = NSELive().live_index(indexName)['metadata']
+        o = liveIndexData['open']
+        l = liveIndexData['low']
+        h = liveIndexData['high']
+        c = liveIndexData['last']
+        # v = niftyData['totalTradedVolume']
+    else:
+        o = liveData[indexName]['open']
+        l = liveData[indexName]['low']
+        h = liveData[indexName]['high']
+        c = liveData[indexName]['close']
+    
+    jdf = index_df(symbol=indexName, from_date=start, to_date=end)
     jdf = jdf[['HistoricalDate', 'OPEN', 'HIGH', 'LOW', 'CLOSE']]
     jdf.rename(columns = {
             'HistoricalDate':'Date',
