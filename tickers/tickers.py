@@ -1,8 +1,20 @@
-import pandas as pd
+from jugaad_data.nse import NSELive
 
 def getTickerList(all=False):
+    nifty50 = NSELive().live_index("NIFTY 50")['data'][1:]
+    niftyData = {}
+    tickerList = []
+    
+    for stock in nifty50:
+        tickerList.append(stock['symbol'])
+        niftyData[stock['symbol']] = {
+        'open': stock['open'],
+        'high': stock['dayHigh'],
+        'low': stock['dayLow'],
+        'close': stock['lastPrice'],
+        'volume': stock['totalTradedVolume'],
+    }
+        
     if not all:
-        return ['ITC', 'WIPRO', 'RELIANCE']
-    return ['CANBK', 'IOC', 'BANKBARODA', 'GRASIM', 'ITC', 'BPCL', 'BAJFINANCE', 'AMBUJACEM', 'RELIANCE', 'CHOLAFIN', 'SBIN', 'HDFC', 'ULTRACEMCO', 'VBL', 'ONGC', 'DABUR', 'EICHERMOT', 'JSWSTEEL', 'GAIL', 'HINDALCO', 'HDFCBANK', 'SHREECEM', 'NTPC', 'ICICIBANK', 'TATASTEEL', 'MUTHOOTFIN', 'HINDUNILVR', 'ADANITRANS', 'BAJAJFINSV', 'WIPRO', 'ICICIPRULI', 'ACC', 'DLF', 'HAVELLS', 'MOTHERSON', 'INDIGO', 'ATGL', 'INDUSTOWER', 'ZOMATO', 'MARICO', 'PGHH', 'COLPAL', 'COALINDIA', 'INDUSINDBK', 'LTIM', 'BOSCHLTD', 'DIVISLAB', 'TATAPOWER', 'VEDL', 'NAUKRI', 'ABB', 'HDFCLIFE', 'HDFCAMC', 'KOTAKBANK', 'ADANIENT', 'ADANIPORTS', 'TITAN', 'INFY', 'BHARTIARTL', 'TATACONSUM', 'IRCTC', 'ASIANPAINT', 'BRITANNIA', 'AXISBANK', 'BAJAJHLDNG', 'APOLLOHOSP', 'NYKAA', 'HCLTECH', 'ADANIGREEN', 'LICI', 'HEROMOTOCO', 'HAL', 'TATAMOTORS', 'SRF', 'SBICARD', 'ICICIGI', 'SBILIFE', 'TORNTPHARM', 'BERGEPAINT', 'LT', 'TECHM', 'PAGEIND', 'AWL', 'DMART', 'TCS', 'PIDILITIND', 'DRREDDY', 'SIEMENS', 'UPL', 'NESTLEIND', 'PIIND', 'MARUTI', 'CIPLA', 'BEL', 'SUNPHARMA', 'POWERGRID']
-    # tickers = pd.read_html('https://ournifty.com/stock-list-in-nse-fo-futures-and-options.html#:~:text=NSE%20F%26O%20Stock%20List%3A%20%20%20%20SL,%20%201000%20%2052%20more%20rows%20')[0]
-    # return tickers.SYMBOL.to_list()
+        return ['ITC', 'WIPRO', 'RELIANCE', 'NESTLEIND', 'TATAMOTORS'], niftyData
+    return tickerList, niftyData

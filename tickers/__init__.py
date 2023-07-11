@@ -1,2 +1,2 @@
 from .tickers import getTickerList
-from .patterns import getCandlePatternList
+from .patterns import getCandlePatternList, recognizePattern

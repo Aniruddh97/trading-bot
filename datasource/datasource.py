@@ -34,24 +34,38 @@ def getJugaadData(ticker, start, end):
     return jdf.loc[::-1].reset_index().drop(['index'], axis=1)
 
 
-def getFullData(ticker, start, end):
-    s, e = getDateRange('1w')
-    ydf = getYahooFinanceData(ticker=ticker, start=s, end=e)
+def getFullData(ticker, start, end, liveData = {}):
+    if len(liveData) == 0:
+        info = NSELive().stock_quote(ticker)['priceInfo']
+        o = info['open']
+        h = info['intraDayHighLow']['max']
+        l = info['intraDayHighLow']['min']
+        c = info['lastPrice']
+        v = 0
+    else:
+        info = liveData[ticker]
+        o = info['open']
+        h = info['high']
+        l = info['low']
+        c = info['close']
+        v = info['volume']
 
     jdf = getJugaadData(ticker, start, end)
     
-    if jdf['Date'][len(jdf)-1] == ydf['Date'][len(ydf)-1]:
+    if jdf['Date'][len(jdf)-1] == pd.to_datetime(end):
         return jdf
-    return pd.concat([jdf, ydf[-1:]], ignore_index = True)
+    jdf.loc[len(jdf)] = [end, o, h, l, c, v]
+    jdf['Date'] = pd.to_datetime(jdf.Date)
+    return jdf.reset_index().drop(['index'], axis=1)
 
 
 def getNifty50Data(start, end):
     _, e = getDateRange('1d')
     niftyData = NSELive().live_index("NIFTY 50")['metadata']
     o = niftyData['open']
-    c = niftyData['last']
-    h = niftyData['high']
     l = niftyData['low']
+    h = niftyData['high']
+    c = niftyData['last']
     # v = niftyData['totalTradedVolume']
     
     jdf = index_df(symbol="NIFTY 50", from_date=start, to_date=end)
