@@ -1,6 +1,6 @@
 import yfinance as yf
 import pandas as pd
-from jugaad_data.nse import stock_df
+from jugaad_data.nse import stock_df, index_df, NSELive
 from datemodule import getDateRange
 
 
@@ -43,3 +43,27 @@ def getFullData(ticker, start, end):
     if jdf['Date'][len(jdf)-1] == ydf['Date'][len(ydf)-1]:
         return jdf
     return pd.concat([jdf, ydf[-1:]], ignore_index = True)
+
+
+def getNifty50Data(start, end):
+    _, e = getDateRange('1d')
+    niftyData = NSELive().live_index("NIFTY 50")['metadata']
+    o = niftyData['open']
+    c = niftyData['last']
+    h = niftyData['high']
+    l = niftyData['low']
+    # v = niftyData['totalTradedVolume']
+    
+    jdf = index_df(symbol="NIFTY 50", from_date=start, to_date=end)
+    jdf = jdf[['HistoricalDate', 'OPEN', 'HIGH', 'LOW', 'CLOSE']]
+    jdf.rename(columns = {
+            'HistoricalDate':'Date',
+            'OPEN':'Open', 
+            'HIGH':'High', 
+            'LOW':'Low',
+            'CLOSE':'Close', 
+        }, inplace = True)
+    jdf = jdf.loc[::-1].reset_index().drop(['index'], axis=1)
+    jdf.loc[len(jdf)] = [e, o, h, l, c]
+    jdf['Date'] = pd.to_datetime(jdf.Date)
+    return jdf.reset_index().drop(['index'], axis=1)

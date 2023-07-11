@@ -1,1 +1,1 @@
-from .datasource import getYahooFinanceData, getJugaadData, getFullData
+from .datasource import getYahooFinanceData, getJugaadData, getFullData, getNifty50Data
