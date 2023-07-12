@@ -25,7 +25,8 @@ class SupportResistanceIndicator:
         supports = dfSlice[dfSlice.Low == dfSlice.Low.rolling(self.window, center=True).min()].Low
         resistances = dfSlice[dfSlice.High == dfSlice.High.rolling(self.window, center=True).max()].High
         levels = pd.concat([supports, resistances])
-        return levels[abs(levels.diff()) > self.levelProximity]
+        return levels
+        # return levels[abs(levels.diff()) > self.levelProximity]
 
 
     def isCloseToResistance(self, candleIndex, levels):
@@ -118,10 +119,11 @@ class SupportResistanceIndicator:
 
         # fig.add_scatter(x=dfSlice.index, y=dfSlice["SignalMarker"], mode="markers",
         #                 marker=dict(size=7, color="Black"), marker_symbol="hexagram", name="signal")
-        fig.add_scatter(x=dfSlice.index, y=dfSlice["Target"], mode="markers",
-                        marker=dict(size=7, color="darkgreen"), name="target")
-        fig.add_scatter(x=dfSlice.index, y=dfSlice["SignalMarker"], mode="markers",
-                        marker=dict(size=7, color="darkred"), name="stoploss")
+        if 'Target' in dfSlice and 'Stoploss' in dfSlice:
+            fig.add_scatter(x=dfSlice.index, y=dfSlice["Target"], mode="markers",
+                            marker=dict(size=7, color="darkgreen"), name="target")
+            fig.add_scatter(x=dfSlice.index, y=dfSlice["Stoploss"], mode="markers",
+                            marker=dict(size=7, color="darkred"), name="stoploss")
 
         fig.update_layout(title_text=self.tickerName, title_font_size=18)
 
@@ -142,19 +144,21 @@ class SupportResistanceIndicator:
         self.df["SignalMarker"] = [self.getSignalMarker(row) for index, row in self.df.iterrows()]
 
     
-    def calculate(self):
-        self.setSignal()
+    def calculate(self, all=True):
+        self.setSignal(all)
         self.setSignalMarker()
         self.setTarget()
         self.setStoploss()
 
 
-    def getSignal(self):
-        return [self.getCandleSignal(index) for index in self.df.index]
+    def getSignal(self, all=True):
+        if all:
+            return [self.getCandleSignal(index) for index in self.df.index]
+        return [self.getCandleSignal(index) if index == len(self.df.index)-1 else 0 for index in self.df.index]
         
 
-    def setSignal(self):
-        self.df["Signal"] = self.getSignal()
+    def setSignal(self, all=True):
+        self.df["Signal"] = self.getSignal(all)
 
 
     def getBuySell(self):

@@ -60,7 +60,7 @@ class TradingBot():
 				
 			# Support Resistance Indicator Signal
 			sri = SupportResistanceIndicator(df, 11, 5, stock)
-			sri.calculate()
+			sri.calculate(all=False)
 			srSignal = sri.getBuySell()[-1]
 			if srSignal != '':
 				stockSignals["SupportResistanceIndicator"] = srSignal

@@ -60,7 +60,6 @@ def getStockData(ticker, start, end, liveData = {}):
 
 
 def getIndexData(indexName, start, end, liveData={}):
-    _, e = getDateRange('1d')
     
     if indexName not in liveData:
         liveIndexData = NSELive().live_index(indexName)['metadata']
@@ -85,6 +84,9 @@ def getIndexData(indexName, start, end, liveData={}):
             'CLOSE':'Close', 
         }, inplace = True)
     jdf = jdf.loc[::-1].reset_index().drop(['index'], axis=1)
-    jdf.loc[len(jdf)] = [e, o, h, l, c]
+
+    if jdf['Date'][len(jdf)-1] != pd.to_datetime(end):
+        jdf.loc[len(jdf)] = [end, o, h, l, c]
     jdf['Date'] = pd.to_datetime(jdf.Date)
+    
     return jdf.reset_index().drop(['index'], axis=1)
