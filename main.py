@@ -85,9 +85,10 @@ class TradingBot():
 
 
 	def showSRI(self, all=False):
-		stocks = self.promisingStocks
+		stocks = list(self.rank().index)
 		if all:
-			stocks = self.data
+			unrankedStocks = [stock for stock in self.data if stock not in stocks]
+			stocks.extend(unrankedStocks)
 
 		for stock in stocks:
 			i = self.indicatorCollection[stock]["sri"]
@@ -103,6 +104,7 @@ class TradingBot():
 
 	def incompleteStocks(self):
 		_, endDate = getDateRange('1d')
+		print(f'EndDate : {endDate}')
 		for stock in self.data:
 			stockData = self.data[stock]
 			if stockData['Date'][len(stockData.index)-1] != pandas.to_datetime(endDate):

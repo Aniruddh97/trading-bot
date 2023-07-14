@@ -12,6 +12,7 @@ class SupportResistanceIndicator:
         self.tickerName = tickerName
         self.RRR = 1.5
         self.df['RSI'] = ta.rsi(data.Close, length=14)
+        self.df["EMA100"] = ta.ema(data.Close, length=100)
         self.df['Level'] = 0
 
         # candle proximity with a level
@@ -83,27 +84,31 @@ class SupportResistanceIndicator:
             return 0
 
 
-    def showIndicator(self, candleIndex, color='darkgrey'):
+    def showIndicator(self, candleIndex):
         start = candleIndex-50
         if start < 0:
             start = 0
-
         dfSlice = self.df[start:candleIndex+1]
+
+        # draw candlestick
         fig = go.Figure(data=[go.Candlestick(x=dfSlice.index,
                         open=dfSlice["Open"],
                         high=dfSlice["High"],
                         low=dfSlice["Low"],
                         close=dfSlice["Close"])])
         
+        # draw EMA100
+        fig.add_scatter(x=dfSlice.index, y=dfSlice.EMA100, line=dict(color="blue", width=1), name="EMA100"),
 
-        levels = self.getLevels(candleIndex)
         
-        # ----------------
+        levels = self.getLevels(candleIndex)
+        # ------------------
         # for better visuals
         levels = levels[levels > (min(dfSlice.Close) - self.levelProximity)]
         levels = levels[levels < (max(dfSlice.High) + self.levelProximity)]
-        # ----------------
+        # ------------------
 
+        # draw levels
         for level in levels.to_list():
             fig.add_shape(
                 type='line',
@@ -111,19 +116,19 @@ class SupportResistanceIndicator:
                 y0=level,
                 x1=dfSlice.index.stop + 2,
                 y1=level,
-                line=dict(color=color),
+                line=dict(color="darkgrey"),
                 xref='x',
                 yref='y',
-                layer='below'
+                layer='below',
             )
 
         # fig.add_scatter(x=dfSlice.index, y=dfSlice["SignalMarker"], mode="markers",
         #                 marker=dict(size=7, color="Black"), marker_symbol="hexagram", name="signal")
-        if 'Target' in dfSlice and 'Stoploss' in dfSlice:
-            fig.add_scatter(x=dfSlice.index, y=dfSlice["Target"], mode="markers",
-                            marker=dict(size=7, color="darkgreen"), name="target")
-            fig.add_scatter(x=dfSlice.index, y=dfSlice["Stoploss"], mode="markers",
-                            marker=dict(size=7, color="darkred"), name="stoploss")
+        # if 'Target' in dfSlice and 'Stoploss' in dfSlice:
+        #     fig.add_scatter(x=dfSlice.index, y=dfSlice["Target"], mode="markers",
+        #                     marker=dict(size=7, color="darkgreen"), name="target")
+        #     fig.add_scatter(x=dfSlice.index, y=dfSlice["Stoploss"], mode="markers",
+        #                     marker=dict(size=7, color="darkred"), name="stoploss")
 
         fig.update_layout(title_text=self.tickerName, title_font_size=18)
 
