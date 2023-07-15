@@ -1,7 +1,6 @@
 import yfinance as yf
 import pandas as pd
 from jugaad_data.nse import stock_df, index_df, NSELive
-from datemodule import getDateRange
 
 
 def getYahooFinanceData(ticker, start, end):
@@ -36,7 +35,9 @@ def getJugaadData(ticker, start, end):
 
 def getStockData(ticker, start, end, liveData = {}):
     if ticker not in liveData:
-        info = NSELive().stock_quote(ticker)['priceInfo']
+        quote = NSELive().stock_quote(ticker)
+        info = quote['priceInfo']
+        date = pd.to_datetime(quote['metadata']['lastUpdateTime'])
         o = info['open']
         h = info['intraDayHighLow']['max']
         l = info['intraDayHighLow']['min']
@@ -44,6 +45,7 @@ def getStockData(ticker, start, end, liveData = {}):
         v = 0
     else:
         info = liveData[ticker]
+        date = info['date']
         o = info['open']
         h = info['high']
         l = info['low']
@@ -51,24 +53,29 @@ def getStockData(ticker, start, end, liveData = {}):
         v = info['volume']
 
     jdf = getJugaadData(ticker, start, end)
+    jdf.loc[len(jdf)] = [date, o, h, l, c, v]
+    jdf['Date'] = pd.to_datetime(jdf.Date).dt.date
     
-    if jdf['Date'][len(jdf)-1] == pd.to_datetime(end):
-        return jdf
-    jdf.loc[len(jdf)] = [end, o, h, l, c, v]
-    jdf['Date'] = pd.to_datetime(jdf.Date)
+    # delete last row
+    if jdf['Date'][len(jdf.index)-1] == jdf['Date'][len(jdf.index)-2]:
+        jdf.drop(index=jdf.index[-1], axis=0, inplace=True)
+
+    
     return jdf.reset_index().drop(['index'], axis=1)
 
 
 def getIndexData(indexName, start, end, liveData={}):
     
     if indexName not in liveData:
-        liveIndexData = NSELive().live_index(indexName)['metadata']
-        o = liveIndexData['open']
-        l = liveIndexData['low']
-        h = liveIndexData['high']
-        c = liveIndexData['last']
-        # v = niftyData['totalTradedVolume']
+        liveIndexData = NSELive().live_index(indexName)
+        date = pd.to_datetime(liveIndexData['timestamp'])
+        metadata = liveIndexData['metadata']
+        o = metadata['open']
+        l = metadata['low']
+        h = metadata['high']
+        c = metadata['last']
     else:
+        date = liveData[indexName]['date']
         o = liveData[indexName]['open']
         l = liveData[indexName]['low']
         h = liveData[indexName]['high']
@@ -85,8 +92,11 @@ def getIndexData(indexName, start, end, liveData={}):
         }, inplace = True)
     jdf = jdf.loc[::-1].reset_index().drop(['index'], axis=1)
 
-    if jdf['Date'][len(jdf)-1] != pd.to_datetime(end):
-        jdf.loc[len(jdf)] = [end, o, h, l, c]
-    jdf['Date'] = pd.to_datetime(jdf.Date)
+    jdf.loc[len(jdf)] = [date, o, h, l, c]
+    jdf['Date'] = pd.to_datetime(jdf.Date).dt.date
+
+    # delete last row
+    if jdf['Date'][len(jdf.index)-1] == jdf['Date'][len(jdf.index)-2]:
+        jdf.drop(index=jdf.index[-1], axis=0, inplace=True)
     
     return jdf.reset_index().drop(['index'], axis=1)
