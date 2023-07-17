@@ -107,5 +107,5 @@ class TradingBot():
 		print(f'EndDate : {endDate}')
 		for stock in self.data:
 			stockData = self.data[stock]
-			if stockData['Date'][len(stockData.index)-1] != pandas.to_datetime(endDate):
+			if stockData['Date'][len(stockData.index)-1] != pandas.to_datetime(endDate).date():
 				print(stock)
