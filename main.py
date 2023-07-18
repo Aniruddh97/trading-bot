@@ -14,9 +14,9 @@ class TradingBot():
 	indicatorCollection = {}
 		
 
-	def loadData(self, timePeriod = '6m', all=True, forceUpdate=False):
-		stocks, stockLiveData = getStockList(all=all)
-		indices, indexLiveData = getIndicesList(all=False)
+	def loadData(self, timePeriod = '6m', label='NIFTY 50', forceUpdate=False):
+		stocks, stockLiveData = getStockList(label)
+		indices, indexLiveData = getIndicesList()
 		startDate, endDate = getDateRange(timePeriod)
 		localData = {}
 
