@@ -30,7 +30,7 @@ class TradingBot():
 
 	def computeSignal(self, all=True):
 		if len(self.data) == 0:
-			print("Nifty 50 stock data not found!")
+			print("index stock data not found!")
 
 		localPromisingStocks = {}
 		for stock in tqdm(self.data):

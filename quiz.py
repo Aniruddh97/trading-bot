@@ -8,15 +8,20 @@ class Quiz:
 		self.tb = tb
 
 
-	def past(self):
-		pass
+	def recent(self, recency=1, rounds=5):
+		self.runEngine(rounds, -recency)
 
 
 	def future(self):
 		pass
 
-
+	
 	def random(self, rounds = 5):
+		firstTicker = list(self.tb.data.keys())[0]
+		candleIndex = random.randint(0, len(self.tb.data[firstTicker].index)-1)
+		self.runEngine(rounds, candleIndex)
+
+	def runEngine(self, rounds=5, candleIndex=50):
 		tickerList = list(self.tb.data.keys())
 		maxProfit = 0
 		maxLoss = 0
@@ -30,9 +35,11 @@ class Quiz:
 			
 			randomTicker = tickerList[random.randint(0, len(tickerList)-1)]
 			indicator = self.tb.indicatorCollection[randomTicker]['sri']
-			randomCandleIndex = random.randint(0+30, len(indicator.df.index)-31)
-			indicator.showIndicator(randomCandleIndex)
+			randomCandleIndex = candleIndex
+			if candleIndex < 0:
+				randomCandleIndex = len(indicator.df.index) - 1 + candleIndex
 			
+			indicator.showIndicator(randomCandleIndex)
 			if not bool(float(input("trade? (1/0): "))):
 				tradeCount -= 1
 				continue
@@ -49,7 +56,7 @@ class Quiz:
 
 			result = 0
 			start = randomCandleIndex+1
-			end = randomCandleIndex + 30
+			end = len(indicator.df.index) - 1
 			resultCandleIndex = start
 			for i in range(start, end):
 				if trade == 'long':
