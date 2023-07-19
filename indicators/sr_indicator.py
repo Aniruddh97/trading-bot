@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import pandas_ta as ta
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 class SupportResistanceIndicator:
 
@@ -12,7 +13,8 @@ class SupportResistanceIndicator:
         self.tickerName = tickerName
         self.RRR = 1.5
         self.df['RSI'] = ta.rsi(data.Close, length=14)
-        self.df["EMA100"] = ta.ema(data.Close, length=100)
+        self.df["EMA14"] = ta.ema(data.Close, length=14)
+        self.df["EMA26"] = ta.ema(data.Close, length=26)
         self.df['Level'] = 0
 
         # candle proximity with a level
@@ -91,14 +93,23 @@ class SupportResistanceIndicator:
         dfSlice = self.df[start:candleIndex+1]
 
         # draw candlestick
-        fig = go.Figure(data=[go.Candlestick(x=dfSlice.index,
-                        open=dfSlice["Open"],
-                        high=dfSlice["High"],
-                        low=dfSlice["Low"],
-                        close=dfSlice["Close"])])
-        
+        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, 
+               vertical_spacing=0.05, subplot_titles=(self.tickerName, ''), 
+               row_width=[0.2, 0.7])
+
+        fig.add_trace(go.Candlestick(x=dfSlice.index,
+                                open=dfSlice["Open"],
+                                high=dfSlice["High"],
+                                low=dfSlice["Low"],
+                                close=dfSlice["Close"]), row=1, col=1)
+
+        # plot volume
+        if 'Volume' in dfSlice:
+            fig.add_trace(go.Bar(x=dfSlice.index, y=dfSlice['Volume'], showlegend=False), row=2, col=1)
+
         # draw EMA100
-        fig.add_scatter(x=dfSlice.index, y=dfSlice.EMA100, line=dict(color="blue", width=1), name="EMA100"),
+        fig.add_scatter(x=dfSlice.index, y=dfSlice.EMA14, line=dict(color="blue", width=1), name="EMA14", row=1, col=1),
+        fig.add_scatter(x=dfSlice.index, y=dfSlice.EMA26, line=dict(color="maroon", width=1), name="EMA26", row=1, col=1),
 
         
         levels = self.getLevels(candleIndex)
@@ -120,6 +131,8 @@ class SupportResistanceIndicator:
                 xref='x',
                 yref='y',
                 layer='below',
+                row= 1,
+                col=1
             )
 
         # fig.add_scatter(x=dfSlice.index, y=dfSlice["SignalMarker"], mode="markers",
@@ -130,8 +143,7 @@ class SupportResistanceIndicator:
         #     fig.add_scatter(x=dfSlice.index, y=dfSlice["Stoploss"], mode="markers",
         #                     marker=dict(size=7, color="darkred"), name="stoploss")
 
-        fig.update_layout(title_text=self.tickerName, title_font_size=18)
-
+        fig.update(layout_xaxis_rangeslider_visible=False)
         fig.show()
         
     
