@@ -92,24 +92,14 @@ class SupportResistanceIndicator:
             start = 0
         dfSlice = self.df[start:candleIndex+1]
 
-        # draw candlestick
+        patternTitle = dfSlice['candlestick_pattern'][dfSlice.index.stop-1][3:].lower()
         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, 
-               vertical_spacing=0.05, subplot_titles=(self.tickerName, ''), 
+               vertical_spacing=0.05, subplot_titles=(self.tickerName, patternTitle), 
                row_width=[0.2, 0.7])
 
-        fig.add_trace(go.Candlestick(x=dfSlice.index,
-                                open=dfSlice["Open"],
-                                high=dfSlice["High"],
-                                low=dfSlice["Low"],
-                                close=dfSlice["Close"]), row=1, col=1)
-
-        # plot volume
-        if 'Volume' in dfSlice:
-            fig.add_trace(go.Bar(x=dfSlice.index, y=dfSlice['Volume'], showlegend=False), row=2, col=1)
-
-        # draw EMA100
-        fig.add_scatter(x=dfSlice.index, y=dfSlice.EMA14, line=dict(color="blue", width=1), name="EMA14", row=1, col=1),
-        fig.add_scatter(x=dfSlice.index, y=dfSlice.EMA26, line=dict(color="maroon", width=1), name="EMA26", row=1, col=1),
+        # draw EMAS
+        # fig.add_scatter(x=dfSlice.index, y=dfSlice.EMA14, line=dict(color="blue", width=1), name="EMA14", row=1, col=1),
+        # fig.add_scatter(x=dfSlice.index, y=dfSlice.EMA26, line=dict(color="maroon", width=1), name="EMA26", row=1, col=1),
 
         
         levels = self.getLevels(candleIndex)
@@ -134,6 +124,17 @@ class SupportResistanceIndicator:
                 row= 1,
                 col=1
             )
+            
+		# draw candlestick
+        fig.add_trace(go.Candlestick(x=dfSlice.index,
+                                open=dfSlice["Open"],
+                                high=dfSlice["High"],
+                                low=dfSlice["Low"],
+                                close=dfSlice["Close"]), row=1, col=1)
+
+        # plot volume
+        if 'Volume' in dfSlice:
+            fig.add_trace(go.Bar(x=dfSlice.index, y=dfSlice['Volume'], showlegend=False), row=2, col=1)
 
         # fig.add_scatter(x=dfSlice.index, y=dfSlice["SignalMarker"], mode="markers",
         #                 marker=dict(size=7, color="Black"), marker_symbol="hexagram", name="signal")

@@ -1,15 +1,19 @@
 import random
+import sqlite3
 from IPython.display import clear_output
 
 
-class Quiz:
+class PaperTrading:
     
 	def __init__(self, tb):
 		self.tb = tb
+		self.conn = sqlite3.connect('../database/orders.sqlite')
 
 
-	def recent(self, recency=1, rounds=5):
-		self.runEngine(rounds, -recency)
+	def recent(self, rounds=5, recency = 7):
+		self.runEngine(rounds, "recent", {
+			"recency": recency
+		})
 
 
 	def future(self):
@@ -17,11 +21,10 @@ class Quiz:
 
 	
 	def random(self, rounds = 5):
-		firstTicker = list(self.tb.data.keys())[0]
-		candleIndex = random.randint(0, len(self.tb.data[firstTicker].index)-1)
-		self.runEngine(rounds, candleIndex)
+		self.runEngine(rounds, "random")
 
-	def runEngine(self, rounds=5, candleIndex=50):
+
+	def runEngine(self, rounds=5, flag="random", options={}):
 		tickerList = list(self.tb.data.keys())
 		maxProfit = 0
 		maxLoss = 0
@@ -35,19 +38,22 @@ class Quiz:
 			
 			randomTicker = tickerList[random.randint(0, len(tickerList)-1)]
 			indicator = self.tb.indicatorCollection[randomTicker]['sri']
-			randomCandleIndex = candleIndex
-			if candleIndex < 0:
-				randomCandleIndex = len(indicator.df.index) - 1 + candleIndex
 			
-			indicator.showIndicator(randomCandleIndex)
+			candleIndex = random.randint(50, len(indicator.df.index)-51)
+			if flag == "recent":
+				candleIndex = len(indicator.df.index) - 1 - options["recency"]
+			
+			indicator.showIndicator(candleIndex)
 			if not bool(float(input("trade? (1/0): "))):
 				tradeCount -= 1
+				indicator.showIndicator(candleIndex+5)
+				input(f"\nPress enter to continue...")
 				continue
 			
 
 			stoploss = float(input("stoploss : "))
 			target = float(input("target : "))
-			currentPrice = indicator.df.Close[randomCandleIndex]
+			currentPrice = indicator.df.Close[candleIndex]
 			RRR = abs(target - currentPrice)/abs(stoploss - currentPrice)
 			print(f'RRR = {RRR}')
 
@@ -55,32 +61,32 @@ class Quiz:
 			data = indicator.df
 
 			result = 0
-			start = randomCandleIndex+1
+			start = candleIndex+1
 			end = len(indicator.df.index) - 1
 			resultCandleIndex = start
 			for i in range(start, end):
 				if trade == 'long':
-					if data.High[i] >= target:
-						result = target - currentPrice
-					elif data.Low[i] <= stoploss:
+					if data.Low[i] <= stoploss:
 						result = stoploss - currentPrice
+					elif data.High[i] >= target:
+						result = target - currentPrice
 				else:
-					if data.High[i] >= stoploss:
-						result = currentPrice - stoploss
-					elif data.Low[i] <= target:
+					if data.Low[i] <= target:
 						result = currentPrice - target
-						
-				if result > 0:
-					result = result * (500/currentPrice)
-					print(f"You've made a profit of Rs{result}")
-					maxProfit = result if result > maxProfit else maxProfit
-					totalRRR += RRR
-					indicator.showIndicator(i)
-					break
-				elif result < 0:
+					elif data.High[i] >= stoploss:
+						result = currentPrice - stoploss
+
+				if result < 0:
 					result = result * (500/currentPrice)
 					print(f"You've booked a loss of Rs{abs(result)}")
 					maxLoss = result if result < maxLoss else maxLoss
+					totalRRR += RRR
+					indicator.showIndicator(i)
+					break	
+				elif result > 0:
+					result = result * (500/currentPrice)
+					print(f"You've made a profit of Rs{result}")
+					maxProfit = result if result > maxProfit else maxProfit
 					totalRRR += RRR
 					indicator.showIndicator(i)
 					break

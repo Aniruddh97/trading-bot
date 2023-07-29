@@ -104,7 +104,6 @@ class TradingBot():
 
 	def incompleteStocks(self):
 		_, endDate = getDateRange('1d')
-		print(f'EndDate : {endDate}')
 		for stock in self.data:
 			stockData = self.data[stock]
 			if stockData['Date'][len(stockData.index)-1] != pandas.to_datetime(endDate).date():
