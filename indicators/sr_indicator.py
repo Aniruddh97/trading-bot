@@ -87,6 +87,10 @@ class SupportResistanceIndicator:
 
 
     def showIndicator(self, candleIndex):
+        self.getIndicator(candleIndex).show()
+        
+
+    def getIndicator(self, candleIndex):
         start = candleIndex-50
         if start < 0:
             start = 0
@@ -117,7 +121,7 @@ class SupportResistanceIndicator:
                 y0=level,
                 x1=dfSlice.index.stop + 2,
                 y1=level,
-                line=dict(color="darkgrey"),
+                line=dict(color="darkslategray"),
                 xref='x',
                 yref='y',
                 layer='below',
@@ -125,7 +129,7 @@ class SupportResistanceIndicator:
                 col=1
             )
             
-		# draw candlestick
+        # draw candlestick
         fig.add_trace(go.Candlestick(x=dfSlice.index,
                                 open=dfSlice["Open"],
                                 high=dfSlice["High"],
@@ -145,7 +149,7 @@ class SupportResistanceIndicator:
         #                     marker=dict(size=7, color="darkred"), name="stoploss")
 
         fig.update(layout_xaxis_rangeslider_visible=False)
-        fig.show()
+        return fig
         
     
     def getSignalMarker(self, x):

@@ -7,7 +7,7 @@ class Order:
         pass
     
     def open(self):
-        self.conn = sqlite3.connect('orders.sqlite')
+        self.conn = sqlite3.connect('./jupyter/orders.sqlite')
         self.cursor = self.conn.cursor()
         
     
@@ -21,9 +21,9 @@ class Order:
         result = self.cursor.execute("DROP TABLE IF EXISTS orders")
         self.close()
         if (result):
-            print("success")
+            return True
         else:
-            print("failure")
+            return False
 
 
     def createTable(self):
@@ -42,9 +42,9 @@ class Order:
         result = self.cursor.execute(query)
         self.close()
         if (result):
-            print("success")
+            return True
         else:
-            print("failure")
+            return False
 
     
     def placeOrder(self, ticker, startdate, strikePrice, stoploss, target):
@@ -63,9 +63,9 @@ class Order:
         result = self.cursor.execute(query, values)
         self.close()
         if (result):
-            print("success")
+            return True
         else:
-            print("failure")
+            return False
 
     
     def closeOrder(self, id, pnl, enddate):
@@ -76,9 +76,9 @@ class Order:
         result = self.cursor.execute(query, data)
         self.close()
         if (result):
-            print("success")
+            return True
         else:
-            print("failure")
+            return False
 
     
     def delete(self, id):
@@ -87,9 +87,9 @@ class Order:
         result = self.cursor.execute(query, (id))
         self.close()
         if (result):
-            print("success")
+            return True
         else:
-            print("failure")
+            return False
 
 
     def getOpenPositions(self):

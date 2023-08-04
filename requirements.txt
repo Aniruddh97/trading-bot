@@ -9,3 +9,4 @@ pandas_ta==0.3.14b
 scipy==1.11.1
 backtesting==0.3.3
 tqdm==4.65.0
+streamlit==1.25.0

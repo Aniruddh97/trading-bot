@@ -40,12 +40,30 @@ class PaperTrading:
 				print(f"startIndex : {start}")
 				print(f"finalIndex : {finalIndex}")
 				indicator.showIndicator(finalIndex)
+				input(f"\nPress enter to continue...")
 				self.db.closeOrder(row.id, result, data['Date'][finalIndex])
 
 
 	def quiz(self, mode = 'random', rounds = 5):
 		if mode == 'random':
 			self.randomQuiz(rounds)
+
+
+	def revisitLosses(self):
+		df = self.db.read("SELECT * FROM orders where result = 'L'")
+		for _, row in df.iterrows():
+			indicator = self.tb.indicatorCollection[row.ticker]['sri']
+			data = indicator.df
+			start = data.index[data['Date'] == pd.to_datetime(row.startdate).date()].tolist()[0]
+			candleIndex = start
+			while candleIndex < data.index.stop-1 and candleIndex-start < 30:
+				candleIndex += 1
+
+			print(f'start index : {start}')
+			print(row)
+			indicator.showIndicator(candleIndex)
+			input(f"\nPress enter to continue...")
+			clear_output(wait=False)
 
 
 	def randomQuiz(self, rounds):

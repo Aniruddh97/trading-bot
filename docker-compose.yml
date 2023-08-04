@@ -8,5 +8,6 @@ services:
         network_mode: host
         volumes:
             - ./:/app
-        command: bash -c "jupyter notebook --port 8888 --NotebookApp.disable_check_xsrf=True --NotebookApp.allow_origin='*' --NotebookApp.token='' --NotebookApp.password='' --NotebookApp.iopub_data_rate_limit=1.0e20"
+        # command: bash -c "jupyter notebook --port 8888 --NotebookApp.disable_check_xsrf=True --NotebookApp.allow_origin='*' --NotebookApp.token='' --NotebookApp.password='' --NotebookApp.iopub_data_rate_limit=1.0e20"
         # command: bash -c "jupyter notebook --ip 192.168.29.107 --port 8888 --NotebookApp.disable_check_xsrf=True --NotebookApp.allow_origin='*' --NotebookApp.token='' --NotebookApp.password='' --NotebookApp.iopub_data_rate_limit=1.0e20"
+        command: bash -c "streamlit run app.py"

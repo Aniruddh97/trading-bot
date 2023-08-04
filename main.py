@@ -71,7 +71,7 @@ class TradingBot():
 				stockSignals["RSI"] = df['RSI'][candleIndex]
 				localPromisingStocks[stock] = stockSignals
 
-			self.promisingStocks = localPromisingStocks
+		self.promisingStocks = localPromisingStocks
 			
 
 	def showCBI(self, all=False):
