@@ -149,6 +149,7 @@ class SupportResistanceIndicator:
         #                     marker=dict(size=7, color="darkred"), name="stoploss")
 
         fig.update(layout_xaxis_rangeslider_visible=False)
+        fig.update(layout_showlegend=False)
         return fig
         
     

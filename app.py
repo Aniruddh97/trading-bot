@@ -2,6 +2,7 @@
 import pandas as pd
 import random
 import math
+import time
 import plotly.graph_objects as go
 import streamlit as st
 import pandas_ta as ta
@@ -13,6 +14,19 @@ from datemodule import getDateRange
 from tickers import getStockList, recognizePattern, getIndicesList
 from datasource import getStockData, getIndexData
 from indicators import ChannelBreakoutIndicator, SupportResistanceIndicator
+
+def manageSession(obj, key, value):
+    if key in obj:
+        return obj[key]
+    else:
+        obj[key] = value
+    return value
+
+
+def clearSession(obj, keys=[]):
+    for key in keys:
+        del obj[key]
+
 
 def computeSignal(tb, all=True):
     if len(tb.data) == 0:
@@ -83,34 +97,55 @@ def trade(pt):
         st.error("Something went wrong while placing your order")
 
 
-def randomQuiz(tb, pt, rounds):
+def randomQuiz(tb, pt, quizSessionData, rounds):
+    manageSession(quizSessionData, 'start', True)
+    rounds = manageSession(quizSessionData, 'rounds', rounds)
+        
     tickerList = list(tb.data.keys())
     maxProfit = maxLoss = totalRRR = tradeCount = balance = 0
+    
+    maxLoss = manageSession(quizSessionData, 'maxLoss', maxLoss)
+    balance = manageSession(quizSessionData, 'balance', balance)
+    totalRRR = manageSession(quizSessionData, 'totalRRR', totalRRR)
+    maxProfit = manageSession(quizSessionData, 'maxProfit', maxProfit)
+    tradeCount = manageSession(quizSessionData, 'tradeCount', tradeCount)
 
     while tradeCount < rounds:
-        st.write(tradeCount)
-        tradeCount += 1
+        st.write(quizSessionData)
+        if 'randomTicker' not in quizSessionData:
+            tradeCount += 1
+
+        quizSessionData['tradeCount'] = tradeCount
         
-        randomTicker = tickerList[random.randint(0, len(tickerList)-1)]
+        randomTicker = manageSession(quizSessionData, 'randomTicker', tickerList[random.randint(0, len(tickerList)-1)])
+
         indicator = tb.indicatorCollection[randomTicker]['sri']
         data = indicator.df
 
-        candleIndex = random.randint(50, len(data.index)-51)
+        candleIndex = manageSession(quizSessionData, 'candleIndex', random.randint(50, len(data.index)-51))
         
         st.plotly_chart(indicator.getIndicator(candleIndex))
 
         take = st.button("Take")
         skip = st.button("Skip")
 
+        if take:
+            quizSessionData['take'] = True
+        else:
+            take = manageSession(quizSessionData, 'take', take)
+
         if skip:
             tradeCount -= 1
-            st.plotly_chart(indicator.showIndicator(candleIndex+5))
+            quizSessionData['tradeCount'] = tradeCount
+            st.plotly_chart(indicator.getIndicator(candleIndex+5))
+            clearSession(quizSessionData, ['randomTicker', 'candleIndex'])
         elif take:
-            stoploss = st.number_input("Stoploss")
-            target = st.number_input("Target")
-
-            if int(stoploss) == 0 or int(target) == 0:
-                st.stop()
+            with st.form("Quiz Form"):
+                stoploss = st.number_input("Stoploss")
+                target = st.number_input("Target")
+                submitted = st.form_submit_button("Submit")
+                if not submitted:
+                    st.stop()
 
             currentPrice = data.Close[candleIndex]
             RRR = abs(target - currentPrice)/abs(stoploss - currentPrice)
@@ -123,18 +158,25 @@ def randomQuiz(tb, pt, rounds):
                 st.text(f"You've booked a loss of Rs{abs(result)}")
                 maxLoss = result if result < maxLoss else maxLoss
                 totalRRR += RRR
+                quizSessionData['maxLoss'] = maxLoss
+                quizSessionData['totalRRR'] = totalRRR
             elif result > 0:
                 st.text(f"You've made a profit of Rs{result}")
                 maxProfit = result if result > maxProfit else maxProfit
                 totalRRR += RRR
+                quizSessionData['maxProfit'] = maxProfit
+                quizSessionData['totalRRR'] = totalRRR
                 st.balloons()
             else:
                 st.text(f"No outcome after {finalIndex - start} iterations")
                 tradeCount -= 1
+                quizSessionData['tradeCount'] = tradeCount
+
             
-            st.plotly_chart(indicator.showIndicator(finalIndex))
-                
             balance += result
+            quizSessionData['balance'] = balance
+            st.plotly_chart(indicator.getIndicator(finalIndex))
+            clearSession(quizSessionData, ['randomTicker', 'candleIndex', 'take'])
         else:
             st.stop()
 
@@ -147,6 +189,7 @@ def randomQuiz(tb, pt, rounds):
     st.text(f'Biggest Proft {maxProfit}')
     st.text(f'Biggest Loss {maxLoss}')
     st.text(f'Average RRR {totalRRR/tradeCount}')
+    st.session_state['quiz'] = {}
 
 
 def load_data(tb, timePeriod = '6m', label='NIFTY 50', forceUpdate=False):
@@ -156,12 +199,12 @@ def load_data(tb, timePeriod = '6m', label='NIFTY 50', forceUpdate=False):
     localData = {}
 
     if len(tb.data) == 0 or forceUpdate:
-        my_bar = st.progress(0, text="loading stock data")
+        my_bar = st.progress(0, text="Loading stock data")
         for i, stock in enumerate(stocks):
             localData[stock] = getStockData(stock, startDate, endDate, stockLiveData)
             my_bar.progress((i+1)*int(100/len(stocks)), text=f'Loading data : {stock}')
 
-        my_bar = st.progress(0, text="loading indices data")
+        my_bar = st.progress(0, text="Loading indices data")
         for i, index in enumerate(indices):
             localData[index] = getIndexData(index, startDate, endDate, indexLiveData)
             my_bar.progress((i+1)*int(100/len(indices)), text=f'Loading data : {index}')
@@ -242,11 +285,17 @@ def main():
         
 
     with QuizTab:
+        quizSessionData = {}
+        if 'quiz' in st.session_state:
+            quizSessionData = st.session_state['quiz']
+        else:
+            st.session_state['quiz'] = quizSessionData
+            
         if tb != None and len(tb.promisingStocks) > 0:
             rounds = st.number_input('Rounds', 3)
             start = st.button('Start')
-            if start:
-                randomQuiz(tb, pt, int(rounds))
+            if start or 'start' in quizSessionData:
+                randomQuiz(tb, pt, quizSessionData, int(rounds))
         else:
             st.error("Please compute data")
 
@@ -280,12 +329,12 @@ def main():
             query = "SELECT *, CAST((julianday(enddate)-julianday(startdate)) AS INTEGER) as duration FROM orders WHERE enddate IS NOT NULL"
             st.dataframe(pt.db.read(query))
 
-        defaultQuery = "SELECT * FROM orders"
-        query = st.text_input("SQL Query", defaultQuery)
-        if query == "":
-            st.stop()
-        st.dataframe(pt.db.read(query))
-
+        with st.expander("SQL Dashboard"):
+            defaultQuery = "SELECT * FROM orders"
+            query = st.text_input("SQL Query", defaultQuery)
+            if query == "":
+                st.stop()
+            st.dataframe(pt.db.read(query))
 
 if __name__ == '__main__':
     main()
