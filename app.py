@@ -63,8 +63,7 @@ def computeSignal(tb, all=True):
         if len(stockSignals) != 0 :
             stockSignals["RSI"] = df['RSI'][candleIndex]
             localPromisingStocks[stock] = stockSignals
-        my_bar.progress((i+1)*int((100/len(tb.data))), text=f'Computing : {stock}')
-
+        my_bar.progress(int((i+1)*(100/len(tb.data.keys()))), text=f'Computing : {stock}')
     my_bar.progress(100, text='Computation completed')
     tb.promisingStocks = localPromisingStocks
 
@@ -202,12 +201,12 @@ def load_data(tb, timePeriod = '6m', label='NIFTY 50', forceUpdate=False):
         my_bar = st.progress(0, text="Loading stock data")
         for i, stock in enumerate(stocks):
             localData[stock] = getStockData(stock, startDate, endDate, stockLiveData)
-            my_bar.progress((i+1)*int(100/len(stocks)), text=f'Loading data : {stock}')
+            my_bar.progress(int((i+1)*(100/len(stocks))), text=f'Loading data : {stock}')
 
         my_bar = st.progress(0, text="Loading indices data")
         for i, index in enumerate(indices):
             localData[index] = getIndexData(index, startDate, endDate, indexLiveData)
-            my_bar.progress((i+1)*int(100/len(indices)), text=f'Loading data : {index}')
+            my_bar.progress(int((i+1)*(100/len(indices))), text=f'Loading data : {index}')
     
         tb.data = localData
 
