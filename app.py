@@ -1,8 +1,6 @@
 # main.py
 import pandas as pd
 import random
-import math
-import time
 import plotly.graph_objects as go
 import streamlit as st
 import pandas_ta as ta
