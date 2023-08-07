@@ -240,7 +240,7 @@ def main():
     if 'tb' not in st.session_state:
         tb = TradingBot()
         pt = PaperTrading(tb)
-        load_data(tb, timePeriod='2y', label='NIFTY IT', forceUpdate=True)
+        load_data(tb, timePeriod='1m', label='NIFTY IT', forceUpdate=True)
         st.session_state['tb'] = tb
         st.session_state['pt'] = pt
     else:
